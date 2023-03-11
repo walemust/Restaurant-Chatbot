@@ -2,6 +2,7 @@ const path = require('path');
 const http = require('http');
 const express = require('express');
 const socketio = require('socket.io');
+const formatMessage = require('./utils/messages')
 
 const app = express();
 const server = http.createServer(app);
@@ -10,22 +11,24 @@ const io = socketio(server);
 //Set static folder
 app.use(express.static(path.join(__dirname, 'public')));
 
+const botName = 'Restaurant Bot';
+
 //Run when client connects
 io.on('connect', socket => {
     console.log('New customer connected...');
     //Welcome current customer
-    socket.emit('message', 'Welcome to the RestaurantOrderBot!');
+    socket.emit('message', formatMessage(botName, 'Welcome to the RestaurantOrderBot!'));
 
     //Broadcast when a customer connects
-    socket.broadcast.emit('message', 'A customer has connected');
+    socket.broadcast.emit('message', formatMessage(botName, 'A customer has connected'));
 
     //Runs when client disconnects
     socket.on('disconnect', () => {
-        io.emit('message', 'A customer has disconnected');
+        io.emit('message', formatMessage(botName, 'A customer has disconnected'));
     });
 
     socket.on('chatMessage', msg => {
-        io.emit('message', msg);
+        io.emit('message', formatMessage('USER', msg));
     })
 })
 
