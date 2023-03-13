@@ -14,7 +14,8 @@ const socket = io();
 
 // Query DOM elements
 const inputField = document.getElementById("msg");
-const chatBox = document.getElementById("chat-messages");
+const chatBox = document.getElementById("chat-message");
+console.log(chatBox);
 
 // Helper function to append a message to the chat box
 function appendMessage(message, sender) {
