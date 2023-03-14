@@ -1,143 +1,151 @@
-const express = require('express');
-const path = require('path');
-const http = require('http');
-const socketio = require('socket.io');
-//const formatMessage = require('./utils/messages');
-//const { userJoin, getCurrentUser, userLeave, getRoomUsers } = require('./utils/users');
+const express = require("express");
+const session = require("express-session");
+const http = require("http");
+const { Server } = require("socket.io");
 
 const app = express();
 const server = http.createServer(app);
-const io = socketio(server);
-const session = require('express-session');
-const sharedSession = require('express-socket.io-session');
+const io = new Server(server);
+
 const quickFoods = {
-    2: 'Item1',
-    3: 'Item2',
-    4: 'Item3',
-    5: 'Item4',
+    2: "Burger and Fries",
+    3: "Pizza",
+    4: "Burritos",
+    5: "Shawarma",
+    6: "Meatpie",
+    7: "Sausage",
+    8: "Jollof-rice",
+    9: "Chicken",
 };
+
 const orderHistory = [];
 
-//Set static folder
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(session({
-    secret: 'secret-key',
+const sessionMiddleware = session({
+    secret: "secret-key",
     resave: false,
     saveUninitialized: true,
-})
-);
+});
 
-io.use(sharedSession(session, {
-    autoSave: true,
-})
-);
+app.use(express.static("public"));
+app.use(sessionMiddleware);
 
-app.get("/", (req, res) => {
-    res.sendFile(__dirname + "./index.html");
+app.get("/", async (req, res) => {
+    try {
+        res.sendFile(__dirname + "/index.html");
+    } catch (err) {
+        console.log(err);
+        res.status(500).send("Error serving restaurant.html");
+    }
+});
+
+io.use((socket, next) => {
+    sessionMiddleware(socket.request, socket.request.res, next);
 });
 
 io.on("connection", (socket) => {
     console.log("User connected:", socket.id);
 
-    socket.emit("bot-message", "Hello! What is your name?");
+    const state = {
+        userName: "",
+        currentOrder: [],
+    };
 
-    socket.on("user-message", (message) => {
+    const botMessage = async (message) => {
+        console.log("Bot message received:", message);
+        socket.emit("bot-message", message);
+    };
+
+    const userMessage = async (message) => {
         console.log("User message received:", message);
-        const session = socket.handshake.session;
 
-        if (!session.userName) {
-            session.userName = message;
-            socket.emit(
-                "bot-message",
-                `Welcome to the ChatBot, ${session.userName}! Place an order\n1. Type here\n99. Typehere\n98. Typehere\n97. Typehere\n0. Cancel order`
-            );
-        } else {
-            switch (message) {
-                case "1":
-                    const itemOptions = Object.keys(quickFoods)
-                        .map((key) => `${key}. ${quickFoods[key]}`)
-                        .join("\n");
-                    socket.emit(
-                        "bot-message",
-                        `Here is a list of items you can order:\n ${itemOptions} \nPlease select one by typing its number.`
-                    );
-                    break;
-
-                case "2":
-                case "3":
-                case "4":
-                case "5":
-                    const selectedIndex = parseInt(message);
-                    if (quickFoods.hasOwnProperty(selectedIndex)) {
-                        const selectedItem = quickFoods[selectedIndex];
-                        session.currentOrder = session.currentOrder || [];
-                        session.currentOrder.push(selectedItem);
-                        socket.emit(
-                            "bot-message",
-                            `${selectedItem} has been added to your order. Do you want to add more fast foods to your order? Type numbers. If not, type 99 to checkout.`
-                        );
-                    } else {
-                        socket.emit("bot-message", "Invalid selection.");
-                    }
-                    break;
-
-                case "99":
-                    if (!session.currentOrder || session.currentOrder.length === 0) {
-                        socket.emit(
-                            "bot-message",
-                            "No order to place. Place an order\n1. See menu"
-                        );
-                    } else {
-                        orderHistory.push(session.currentOrder);
-                        socket.emit("bot-message", "Order placed");
-                        delete session.currentOrder;
-                    }
-                    break;
-
-                case "98":
-                    if (orderHistory.length === 0) {
-                        socket.emit("bot-message", "No previous orders");
-                    } else {
-                        const orderHistoryString = orderHistory
-                            .map((order, index) => `Order ${index + 1}: ${order.join(", ")}`)
+        try {
+            if (!state.userName) {
+                // Save the user's name and update the welcome message
+                state.userName = message;
+                await botMessage(
+                    `Welcome to the ChatBot, ${state.userName}! Place an order\n1. Typehere\n99. Typehere\n98. Typehere\n97. Typehere\n0. Cancel order`
+                );
+            } else {
+                switch (message) {
+                    case "1":
+                        // Generate the list of items dynamically
+                        const itemOptions = Object.keys(quickFoods)
+                            .map((key) => `${key}. ${quickFoods[key]}`)
                             .join("\n");
-                        socket.emit(
-                            "bot-message",
-                            `Here is your order history:\n ${orderHistoryString}`
+                        await botMessage(
+                            `Here is a list of items you can order:\n ${itemOptions} \nPlease select one by typing its number.`
                         );
-                    }
-                    break;
-
-                case "97":
-                    if (!session.currentOrder || session.currentOrder.length === 0) {
-                        socket.emit(
-                            "bot-message",
-                            "No current order. Place an order\n1. See menu"
-                        );
-                    } else {
-                        const currentOrderString = session.currentOrder.join(", ");
-                        socket.emit(
-                            "bot-message",
-                            `Here is your current order:\n ${currentOrderString}`
-                        );
-                    }
-                    break;
-
-                case "0":
-                    if (session.currentOrder && session.currentOrder.length > 0) {
-                        delete session.currentOrder;
-                        socket.emit("bot-message", "Order cancelled");
-                    } else {
-                        socket.emit("bot-message", "No current order to cancel");
-                    }
-                    break;
-
-                default:
-                    socket.emit("bot-message", "Invalid selection.");
-                    break;
+                        break;
+                    case "2":
+                    case "3":
+                    case "4":
+                    case "5":
+                        // Parse the number from the user input and add the corresponding item to the current order
+                        const selectedIndex = parseInt(message);
+                        if (quickFoods.hasOwnProperty(selectedIndex)) {
+                            const selectedItem = quickFoods[selectedIndex];
+                            state.currentOrder.push(selectedItem);
+                            await botMessage(
+                                `${selectedItem} has been added to your order. Do you want to add more items to your order? Type numbers. If not, type 99 to checkout.`
+                            );
+                        } else {
+                            await botMessage("Invalid selection.");
+                        }
+                        break;
+                    case "99":
+                        if (state.currentOrder.length === 0) {
+                            await botMessage(
+                                "No order to place. Place an order\n1. See menu"
+                            );
+                        } else {
+                            orderHistory.push(state.currentOrder);
+                            await botMessage("Order placed");
+                            state.currentOrder = [];
+                        }
+                        break;
+                    case "98":
+                        if (orderHistory.length === 0) {
+                            await botMessage("No previous orders");
+                        } else {
+                            const orderHistoryString = orderHistory
+                                .map(
+                                    (order, index) => `Order ${index + 1}. ${order.join(", ")}`
+                                )
+                                .join("\n");
+                            await botMessage(
+                                `Here are your previous orders:\n${orderHistoryString}`
+                            );
+                        }
+                        break;
+                    case "97":
+                        if (state.currentOrder.length === 0) {
+                            await botMessage("No current order");
+                        } else {
+                            const currentOrderString = state.currentOrder.join(", ");
+                            await botMessage(
+                                `Here is your current order:\n${currentOrderString}`
+                            );
+                        }
+                        break;
+                    case "0":
+                        if (state.currentOrder.length === 0) {
+                            await botMessage("No order to cancel");
+                        } else {
+                            state.currentOrder = [];
+                            await botMessage("Order canceled");
+                        }
+                        break;
+                    default:
+                        await botMessage("Invalid input");
+                }
             }
+        } catch (err) {
+            console.log(err);
+            await botMessage("An error occurred while processing your request.");
         }
-    });
+    };
+
+    socket.on("user-message", userMessage);
 
     socket.on("disconnect", () => {
         console.log("User disconnected:", socket.id);
@@ -145,7 +153,7 @@ io.on("connection", (socket) => {
 });
 
 server.listen(3000, () => {
-    console.log("Server listening on port 3000");
+    console.log("Listening on http://localhost:3000");
 });
 
 // const botName = 'Restaurant Bot';
