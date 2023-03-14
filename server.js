@@ -63,7 +63,7 @@ io.on("connection", (socket) => {
                 // Save the user's name and update the welcome message
                 state.userName = message;
                 await botMessage(
-                    `Welcome to the ChatBot, ${state.userName}! Place an order\n1. Typehere\n99. Typehere\n98. Typehere\n97. Typehere\n0. Cancel order`
+                    `Welcome to the ChatBot, ${state.userName}! Place an order\n1. Place an order\n99. Checkout order\n98. Order History\n97. Current order\n0. Cancel order`
                 );
             } else {
                 switch (message) {
@@ -80,6 +80,10 @@ io.on("connection", (socket) => {
                     case "3":
                     case "4":
                     case "5":
+                    case "6":
+                    case "7":
+                    case "8":
+                    case "9":
                         // Parse the number from the user input and add the corresponding item to the current order
                         const selectedIndex = parseInt(message);
                         if (quickFoods.hasOwnProperty(selectedIndex)) {
