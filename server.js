@@ -6,6 +6,8 @@ const { Server } = require("socket.io");
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
+require("dotenv").config();
+const PORT = process.env.PORT || 3000;
 
 const quickFoods = {
     2: "Burger and Fries",
@@ -156,8 +158,8 @@ io.on("connection", (socket) => {
     });
 });
 
-server.listen(3000, () => {
-    console.log("Listening on http://localhost:3000");
+server.listen(process.env.PORT, () => {
+    console.log(`Listening on ${process.env.PORT}`);
 });
 
 // const botName = 'Restaurant Bot';
