@@ -52,7 +52,7 @@ io.on("connection", (socket) => {
 
     const botMessage = async (message) => {
         console.log("Bot message received:", message);
-        socket.emit("bot-message", message);
+        socket.emit("chat-messages", message);
     };
 
     const userMessage = async (message) => {
@@ -63,7 +63,7 @@ io.on("connection", (socket) => {
                 // Save the user's name and update the welcome message
                 state.userName = message;
                 await botMessage(
-                    `Welcome to the ChatBot, ${state.userName}! Place an order\n1. Place an order\n99. Checkout order\n98. Order History\n97. Current order\n0. Cancel order`
+                    `Welcome to the ChatBot, ${state.userName}!#Place an order#1. Place an order#99. Checkout order#98. Order History#97. Current order#0. Cancel order`
                 );
             } else {
                 switch (message) {
@@ -71,9 +71,9 @@ io.on("connection", (socket) => {
                         // Generate the list of items dynamically
                         const itemOptions = Object.keys(quickFoods)
                             .map((key) => `${key}. ${quickFoods[key]}`)
-                            .join("\n");
+                            .join("#");
                         await botMessage(
-                            `Here is a list of items you can order:\n ${itemOptions} \nPlease select one by typing its number.`
+                            `Here is a list of items you can order:# ${itemOptions} #Please select one by typing its number.`
                         );
                         break;
                     case "2":
@@ -99,11 +99,11 @@ io.on("connection", (socket) => {
                     case "99":
                         if (state.currentOrder.length === 0) {
                             await botMessage(
-                                "No order to place. Place an order\n1. See menu"
+                                "No order to place. Place an order#1. See menu"
                             );
                         } else {
                             orderHistory.push(state.currentOrder);
-                            await botMessage("Order placed");
+                            await botMessage("Order placed, you will get it in 30mins");
                             state.currentOrder = [];
                         }
                         break;
@@ -115,9 +115,9 @@ io.on("connection", (socket) => {
                                 .map(
                                     (order, index) => `Order ${index + 1}. ${order.join(", ")}`
                                 )
-                                .join("\n");
+                                .join("#");
                             await botMessage(
-                                `Here are your previous orders:\n${orderHistoryString}`
+                                `Here are your previous orders:#${orderHistoryString}`
                             );
                         }
                         break;
@@ -127,7 +127,7 @@ io.on("connection", (socket) => {
                         } else {
                             const currentOrderString = state.currentOrder.join(", ");
                             await botMessage(
-                                `Here is your current order:\n${currentOrderString}`
+                                `Here is your current order:#${currentOrderString}`
                             );
                         }
                         break;

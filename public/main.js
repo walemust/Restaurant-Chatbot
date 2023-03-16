@@ -3,10 +3,9 @@
 // const roomName = document.getElementById('room-name');
 // const userList = document.getElementById('users');
 
-// //Get username and room from URL
-// const { username, room } = Qs.parse(location.search, {
-//     ignoreQueryPrefix: true
-// });
+// //Get username from URL
+const userName = document.getElementById("username");
+
 
 // console.log(username, room);
 
@@ -15,30 +14,55 @@ const socket = io();
 // Query DOM elements
 const inputField = document.getElementById("msg");
 const chatBox = document.getElementById("chat-message");
-console.log(chatBox);
+//console.log(chatBox);
+
+
+// Join chatroom
+socket.emit('joinRoom', { userName });
 
 // Helper function to append a message to the chat box
 function appendMessage(message, sender) {
-    const messageElement = document.createElement("div");
-    messageElement.classList.add("message-text", sender);
-    messageElement.textContent = message;
+    const exists = document.getElementsByClassName("chat-message").length > 0
+    if (!exists) {
+        const messageElement = document.createElement("div");
+        messageElement.classList.add("message", sender);
+        messageElement.textContent = message;
 
+        const messageContainer = document.createElement("div");
+        messageContainer.classList.add("chat-message");
+        messageContainer.appendChild(messageElement);
+        chatBox.appendChild(messageContainer);
+
+    } else {
+        console.log("IT EXISTS")
+        appendMessageV2(message, sender)
+    }
+
+}
+
+function appendMessageV2(message, sender) {
+    const parent = document.getElementsByClassName("chat-message")[0]
+    console.log(document.getElementsByClassName("chat-message"))
+    const child = parent.appendChild(document.createElement("div"))
+    child.classList.add("message", sender)
     const timestamp = new Date().toLocaleTimeString(); // create timestamp
-    const timestampElement = document.createElement("span"); // create span element for timestamp
-    timestampElement.classList.add("timestamp");
+    const timestampElement = document.createElement("p"); // create span element for timestamp
+    timestampElement.classList.add("meta");
     timestampElement.textContent = timestamp;
+    child.appendChild(timestampElement)
 
-    const messageContainer = document.createElement("div");
-    messageContainer.classList.add("message-container");
-    messageContainer.appendChild(messageElement);
-    messageContainer.appendChild(timestampElement);
-    chatBox.appendChild(messageContainer);
+    message.split("#").forEach(element => {
+        const subchild = child.appendChild(document.createElement("p"))
+        subchild.innerHTML = element
+    });
+    console.log(parent)
+    console.log(message)
     chatBox.scrollTop = chatBox.scrollHeight;
 }
 
 // Handle sending messages
 function sendMessage() {
-    const message = inputField.value.trim();
+    const message = `${inputField.value.trim()}`;
     if (message === "") {
         return;
     }
@@ -48,8 +72,8 @@ function sendMessage() {
 }
 
 // Handle receiving messages from the server
-socket.on("bot-message", (message) => {
-    appendMessage(message, "bot");
+socket.on("chat-messages", (message) => {
+    appendMessageV2(message, "bot");
 });
 
 // Attach event listeners

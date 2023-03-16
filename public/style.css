@@ -97,6 +97,7 @@ a {
   background-color: var(--light-color);
   border-radius: 5px;
   overflow-wrap: break-word;
+  overflow: auto;
 }
 
 .chat-messages .message .meta {
