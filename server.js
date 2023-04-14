@@ -2,6 +2,8 @@ const express = require("express");
 const session = require("express-session");
 const http = require("http");
 const { Server } = require("socket.io");
+const { dbConnect } = require("./db/db");
+
 
 const app = express();
 const server = http.createServer(app);
@@ -157,6 +159,8 @@ io.on("connection", (socket) => {
         console.log("User disconnected:", socket.id);
     });
 });
+
+dbConnect();
 
 server.listen(process.env.PORT, () => {
     console.log(`Listening on ${process.env.PORT}`);
