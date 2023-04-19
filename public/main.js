@@ -1,20 +1,12 @@
-// const chatForm = document.getElementById('chat-form');
-// const chatMessages = document.querySelector('.chat-messages');
-// const roomName = document.getElementById('room-name');
-// const userList = document.getElementById('users');
-
 // //Get username from URL
 const userName = document.getElementById("username");
 
-
-// console.log(username, room);
 
 const socket = io();
 
 // Query DOM elements
 const inputField = document.getElementById("msg");
 const chatBox = document.getElementById("chat-message");
-//console.log(chatBox);
 
 
 // Join chatroom
@@ -34,7 +26,6 @@ function appendMessage(message, sender) {
         chatBox.appendChild(messageContainer);
 
     } else {
-        //console.log("IT EXISTS")
         appendMessageV2(message, sender)
     }
 
@@ -42,7 +33,6 @@ function appendMessage(message, sender) {
 
 function appendMessageV2(message, sender) {
     const parent = document.getElementsByClassName("chat-message")[0]
-    //console.log(document.getElementsByClassName("chat-message"))
     const child = parent.appendChild(document.createElement("div"))
     child.classList.add("message", sender)
     const timestamp = new Date().toLocaleTimeString(); // create timestamp
@@ -55,8 +45,6 @@ function appendMessageV2(message, sender) {
         const subchild = child.appendChild(document.createElement("p"))
         subchild.innerHTML = element
     });
-    //console.log(parent)
-    //console.log(message)
     chatBox.scrollTop = chatBox.scrollHeight;
 }
 
